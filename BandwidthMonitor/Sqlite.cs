@@ -85,16 +85,19 @@ namespace BandwidthMonitor
             string stm = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY Id DESC LIMIT 7";
             double BytesRecived = 0;
             double BytesSent = 0;
-            using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection))
-            {
-                using (SQLiteDataReader rdr = cmd.ExecuteReader())
-                {
-                    while (rdr.Read())
-                    {
-                        BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
-                        BytesSent += double.Parse(rdr["BytesSent"].ToString());
+            try {
+                using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                        while (rdr.Read()) {
+                            BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
+                            BytesSent += double.Parse(rdr["BytesSent"].ToString());
+                        }
                     }
                 }
+            }
+            catch (Exception) {
+
+                
             }
             Bytes[0] = BytesRecived;
             Bytes[1] = BytesSent;
@@ -109,16 +112,19 @@ namespace BandwidthMonitor
             string stm = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY Id DESC LIMIT 30";
             double BytesRecived = 0;
             double BytesSent = 0;
-            using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection))
-            {
-                using (SQLiteDataReader rdr = cmd.ExecuteReader())
-                {
-                    while (rdr.Read())
-                    {
-                        BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
-                        BytesSent += double.Parse(rdr["BytesSent"].ToString());
+            try {
+                using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                        while (rdr.Read()) {
+                            BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
+                            BytesSent += double.Parse(rdr["BytesSent"].ToString());
+                        }
                     }
                 }
+            }
+            catch (Exception) {
+
+                
             }
             Bytes[0] = BytesRecived;
             Bytes[1] = BytesSent;

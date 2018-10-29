@@ -66,6 +66,7 @@ namespace BandwidthMonitor
             InitializeNetworkInterfaces();
             sqlite.InitBinding(intClass.usefulInterfaces3);
             sqlite.CheckIfAnyRowsExists(intClass.usefulInterfaces3);
+            UpdateDatabase();
             sqlite.GetStatsOnStartup(intClass.usefulInterfaces3);
             InitTimer();
             InitTimerMinute();
