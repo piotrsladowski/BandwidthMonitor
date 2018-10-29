@@ -52,7 +52,7 @@ namespace BandwidthMonitor
                 string howMany = $"SELECT COUNT(*) from '{ni.Id + "-" + ni.Name}'";
                 SQLiteCommand command = new SQLiteCommand(howMany, m_dbConnection);
                 int result = int.Parse(command.ExecuteScalar().ToString());
-                if(result == 7) {
+                if(result == 0) {
                     string date = DateTime.Now.ToString("yyyy-MM-dd");
                     string insertFirstDateRow = $"INSERT INTO '{ni.Id + "-" + ni.Name}' (Day, BytesRecived, BytesSent, Total) values ('{date}', 0, 0, 0)";
                     CommandExecuteNonQuery(insertFirstDateRow, m_dbConnection);
@@ -78,46 +78,6 @@ namespace BandwidthMonitor
             }
             CloseConnection();
         }
-
-        /*public double GetLastWeek(NetworkInterface interfejs)
-        {
-            string name = interfejs.Name;
-            string idString = interfejs.Id;
-            OpenConnection();
-            string howMany = $"SELECT COUNT(*) from '{interfejs.Id + "-" + interfejs.Name}'";
-            SQLiteCommand command = new SQLiteCommand(howMany, m_dbConnection);
-            int result = int.Parse(command.ExecuteScalar().ToString());
-            for(int i = 0; i < 7; i++) {
-                string getLat7Items = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY BytesRecived DESC LIMIT 7";
-                DataTable dataTable = new DataTable("dfs");
-                DataColumn dataColumn = new DataColumn();
-                //dataTable.Columns.Add(dataColumn);
-                
-                SQLiteCommand command2 = new SQLiteCommand(getLat7Items, m_dbConnection);
-                SQLiteDataAdapter da = new SQLiteDataAdapter(command2);
-                da.Fill(dataTable);
-                DataRow[] result3 = dataTable.Select("Day = '2018-10-13' AND BytesRecived = 0");
-                foreach(DataRow row in result3) {
-                    MessageBox.Show(row[1].ToString());
-                }
-                MessageBox.Show(result3.ElementAt(0).ToString());
-            }
-            string stm = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY Id DESC LIMIT 7";
-            double result2 = 0;
-            using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection))
-            {
-                using (SQLiteDataReader rdr = cmd.ExecuteReader())
-                {
-                    while (rdr.Read())
-                    {
-                        result2 += double.Parse(rdr["BytesRecived"].ToString());
-                        //MessageBox.Show(rdr["BytesRecived"].ToString());
-                    }
-                }
-            }
-            CloseConnection();
-            return result2;
-        }*/
         public double[] GetLast7Days(NetworkInterface interfejs)
         {
             OpenConnection();
@@ -215,17 +175,43 @@ namespace BandwidthMonitor
                 SQLiteCommand command = new SQLiteCommand(update, m_dbConnection);
                 command.ExecuteNonQuery();
             }
-
-            //string update = "update UsefulInterfaces SET IntName = 'dupa'";
-            // WHERE IdString = '{ACDC777C-24A4-421C-AB79-9CF5496BC780}'";
-
-
             //CommandExecuteNonQuery(update, m_dbConnection);
             CloseConnection();
         }
-        public void GetStatsOnStartup()
+        public void GetStatsOnStartup(List<NetworkInterface> interfaces)
         {
+            OpenConnection();
+            DataTable dt = new DataTable { TableName = "MyTableName" };
+            dt.Clear();
+            dt.Columns.Add("Interface");
+            dt.Columns.Add("BytesRecived");
+            dt.Columns.Add("BytesSent");
+            string date = DateTime.Now.ToString("yyyy-MM-dd");
 
+            foreach (NetworkInterface nic in interfaces) {
+                    string name = nic.Name;
+                    string idString = nic.Id;
+
+                    string selectOnStartup = $"SELECT * FROM '{idString + "-" + name}' WHERE Day = '{date}'";
+                    using (SQLiteCommand cmd = new SQLiteCommand(selectOnStartup, m_dbConnection)) {
+                        using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+
+                            while (rdr.Read()) {
+                                                            
+                            double BytesRecived = double.Parse(rdr["BytesRecived"].ToString());
+                            double BytesSent = double.Parse(rdr["BytesSent"].ToString());
+
+                            DataRow row3 = dt.NewRow();
+                            row3["Interface"] = idString + "-" + name;
+                            row3["BytesRecived"] = BytesRecived;
+                            row3["BytesSent"] = BytesSent;
+                            dt.Rows.Add(row3);
+                            }
+                        }
+                    }
+            }
+            CloseConnection();
+            //dt.WriteXml("dtSchemaOrStructure5.xml");
         }
        
     }

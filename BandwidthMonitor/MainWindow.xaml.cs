@@ -66,6 +66,7 @@ namespace BandwidthMonitor
             InitializeNetworkInterfaces();
             sqlite.InitBinding(intClass.usefulInterfaces3);
             sqlite.CheckIfAnyRowsExists(intClass.usefulInterfaces3);
+            sqlite.GetStatsOnStartup(intClass.usefulInterfaces3);
             InitTimer();
             InitTimerMinute();
         }
@@ -241,6 +242,7 @@ namespace BandwidthMonitor
         private void cb_Interfaces_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             lastSelectedItem = cb_Interfaces.SelectedIndex;
+            UpdateNetworkInterfacesLabels();
             GetLast7Days();
             GetLast30Days();
         }
