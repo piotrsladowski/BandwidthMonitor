@@ -14,6 +14,8 @@ namespace BandwidthMonitor
     public class Sqlite : InterfacesClass
     {
         SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=D:\Visual Studio\BandwidthMonitor\BandwidthMonitor\bin\Debug\MyDB.sqlite;Version=3;");
+        DataTable dt = new DataTable { TableName = "MyTableName" };
+        DataTable compareBytes = new DataTable { TableName = "MyTable2" };
 
         private void OpenConnection()
         {
@@ -122,9 +124,7 @@ namespace BandwidthMonitor
                     }
                 }
             }
-            catch (Exception) {
-
-                
+            catch (Exception) {  
             }
             Bytes[0] = BytesRecived;
             Bytes[1] = BytesSent;
@@ -132,37 +132,17 @@ namespace BandwidthMonitor
             return Bytes;
         }
 
-        //Checks if interface exists and adds if not
-        /*public void AddInterfaces(List<NetworkInterface> UsefulInterface)
-        {
-            OpenConnection();
-            foreach (NetworkInterface nic in UsefulInterface) {
-                string name = nic.Name;
-                string idString = nic.Id;
-                
-
-                //string sql = $"IF * NOT EXISTS (SELECT 1 FROM UsefulInterfaces WHERE IntName = '{name}') BEGIN INSERT INTO UsefulInterfaces (IntName) VALUES ('{name}') END";
-                string sql = $"SELECT * FROM UsefulInterfaces WHERE IdString = '{idString}'";
-                //string sql = "select * from usefulinterfaces order by intName desc";
-                //SQLiteCommand command = new SQLiteCommand(query.ToString(), m_dbConnection);
-                SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
-                SQLiteDataReader reader = command.ExecuteReader();
-
-                if(reader.HasRows == false) {
-                    string insert = $"INSERT INTO UsefulInterfaces (IntName, IdString, MegaBytesRecived, MegaBytesSent) values ('{name}', '{idString}', 0, 0)";
-                    SQLiteCommand commandInsertInterfaces = new SQLiteCommand(insert, m_dbConnection);
-                    commandInsertInterfaces.ExecuteNonQuery();
-                }
-
-            }
-            CloseConnection();
-        }*/
-
         public void Update(List<NetworkInterface> UsefulInterfaces)
         {
             OpenConnection();
+            if (compareBytes.Columns.Contains("Interface")) {
+                compareBytes.Columns.Add("Interface");
+            }
 
-            foreach(NetworkInterface nic in UsefulInterfaces) {
+            compareBytes.Columns.Add("BytesRecived");
+            compareBytes.Columns.Add("BytesSent");
+
+            foreach (NetworkInterface nic in UsefulInterfaces) {
                 string name = nic.Name;
                 string idString = nic.Id;
 
@@ -187,7 +167,7 @@ namespace BandwidthMonitor
         public void GetStatsOnStartup(List<NetworkInterface> interfaces)
         {
             OpenConnection();
-            DataTable dt = new DataTable { TableName = "MyTableName" };
+            
             dt.Clear();
             dt.Columns.Add("Interface");
             dt.Columns.Add("BytesRecived");
@@ -217,7 +197,7 @@ namespace BandwidthMonitor
                     }
             }
             CloseConnection();
-            //dt.WriteXml("dtSchemaOrStructure5.xml");
+            //dt.WriteXml("dtSchemaOrStructure4.xml");
         }
        
     }

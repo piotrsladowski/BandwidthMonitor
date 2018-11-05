@@ -38,14 +38,8 @@ namespace BandwidthMonitor
         private System.Windows.Threading.DispatcherTimer dispatcherTimer;
         //Timer minutowy
         private System.Windows.Threading.DispatcherTimer dispatcherTimerMinute;
-
+        //To rememer selected item after refreshing interfaces list
         private int lastSelectedItem = 0;
-
-        //All interfaces
-        //private NetworkInterface[] networkInterfaces;
-
-        //Only working interfaces
-        //private List<NetworkInterface> usefulInterfaces3 = new List<NetworkInterface>();
 
         public MainWindow()
         {
@@ -66,7 +60,6 @@ namespace BandwidthMonitor
             InitializeNetworkInterfaces();
             sqlite.InitBinding(intClass.usefulInterfaces3);
             sqlite.CheckIfAnyRowsExists(intClass.usefulInterfaces3);
-            UpdateDatabase();
             sqlite.GetStatsOnStartup(intClass.usefulInterfaces3);
             InitTimer();
             InitTimerMinute();
@@ -86,17 +79,12 @@ namespace BandwidthMonitor
             }
             //If there is at least than 1 useful interface, fill comboBox
             if (intClass.usefulInterfaces3.Count > 0) {
-                //cb_Interfaces.Items.Clear();
                 foreach(NetworkInterface ni in intClass.usefulInterfaces3) {
                     if (!cb_Interfaces.Items.Contains(ni.Name))
                     {
                         cb_Interfaces.Items.Add(ni.Name);
                     }
                 }
-                /*foreach(NetworkInterface ni in intClass.usefulInterfaces3)
-                {
-                    MessageBox.Show(ni.Name);
-                }*/
             }
             //Select first interface on startup
             cb_Interfaces.SelectedIndex = lastSelectedItem;
@@ -197,7 +185,6 @@ namespace BandwidthMonitor
             InitializeNetworkInterfaces2();
             UpdateDatabase();
             Sqlite sq = new Sqlite();
-            //sq.GetLastWeek(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
             GetLast7Days();
             GetLast30Days();
             sq.CheckIfCurrentDayExists(intClass.usefulInterfaces3);

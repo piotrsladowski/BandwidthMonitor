@@ -5,10 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BandwidthMonitor"
         mc:Ignorable="d"
-        Title="MainWindow" Height="300" Width="649"
+        Title="Bandwidth Monitor" Height="300" Width="649"
         Loaded="MainWindows_Loaded" StateChanged="Window_StateChanged" Activated="Window_Activated" Deactivated="Window_Deactivated">
     <Grid>
-        <Button x:Name="button_Test" Content="Button" HorizontalAlignment="Left" Margin="275,233,0,0" VerticalAlignment="Top" Width="75"/>
         <ComboBox x:Name="cb_Interfaces" HorizontalAlignment="Left" Margin="159,10,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="cb_Interfaces_SelectionChanged"/>
         <Label Content="Choose interface:" HorizontalAlignment="Left" Margin="20,10,0,0" VerticalAlignment="Top" Width="119"/>
         <Label x:Name="label_IPAdress" Content="IP Address:" HorizontalAlignment="Left" Margin="10,233,0,0" VerticalAlignment="Top" Width="90"/>
