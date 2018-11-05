@@ -31,6 +31,7 @@ namespace BandwidthMonitor
 
     public partial class MainWindow : Window
     {
+        Sqlite sqlite = new Sqlite();
         InterfacesClass intClass = new InterfacesClass();
         private System.Windows.Forms.NotifyIcon notifyIcon;
 
@@ -56,7 +57,7 @@ namespace BandwidthMonitor
 
         void MainWindows_Loaded(object sender, RoutedEventArgs e)
         {
-            Sqlite sqlite = new Sqlite();
+            //Sqlite sqlite = new Sqlite();
             InitializeNetworkInterfaces();
             sqlite.InitBinding(intClass.usefulInterfaces3);
             sqlite.CheckIfAnyRowsExists(intClass.usefulInterfaces3);
@@ -183,11 +184,12 @@ namespace BandwidthMonitor
         private void dispatcherTimerMinute_Tick(object sender, EventArgs e)
         {
             InitializeNetworkInterfaces2();
-            UpdateDatabase();
-            Sqlite sq = new Sqlite();
+            //UpdateDatabase();
+            //Sqlite sq = new Sqlite();
+            sqlite.Update(intClass.usefulInterfaces3);
             GetLast7Days();
             GetLast30Days();
-            sq.CheckIfCurrentDayExists(intClass.usefulInterfaces3);
+            sqlite.CheckIfCurrentDayExists(intClass.usefulInterfaces3);
             
         }
 
@@ -236,9 +238,10 @@ namespace BandwidthMonitor
         }
         private void GetLast7Days()
         {
-            Sqlite sq = new Sqlite();
+            Sqlite sqlite = new Sqlite();
 
-            double[] Bytes = sq.GetLast7Days(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
+
+            double[] Bytes = sqlite.GetLast7Days(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
             double BytesRecived = Math.Round((Bytes[0]) / (Math.Pow(1024, 2)), 2);
             double BytesSent = Math.Round((Bytes[1]) / (Math.Pow(1024, 2)), 2);
             label_BytesRecivedWeek.Content = BytesRecived.ToString() + "MB";

@@ -131,16 +131,15 @@ namespace BandwidthMonitor
             CloseConnection();
             return Bytes;
         }
-
+        //Jak program jest włączany jeszcze raz, bez restartu systemu, to nie działa
         public void Update(List<NetworkInterface> UsefulInterfaces)
         {
             OpenConnection();
-            if (compareBytes.Columns.Contains("Interface")) {
+            if (compareBytes.Columns.Contains("Interface") == false) {
                 compareBytes.Columns.Add("Interface");
+                compareBytes.Columns.Add("BytesRecived");
+                compareBytes.Columns.Add("BytesSent");
             }
-
-            compareBytes.Columns.Add("BytesRecived");
-            compareBytes.Columns.Add("BytesSent");
 
             foreach (NetworkInterface nic in UsefulInterfaces) {
                 string name = nic.Name;
@@ -148,11 +147,17 @@ namespace BandwidthMonitor
 
                 IPv4InterfaceStatistics interfaceStatistics = nic.GetIPv4Statistics();
 
-                double MegaBytesRecived = Math.Round((interfaceStatistics.BytesReceived) / (Math.Pow(1024, 2)), 2);//później do usunięcia
-                double MegaBytesSent = Math.Round((interfaceStatistics.BytesSent) / (Math.Pow(1024, 2)), 2);
+                double BytesRecived2 = 0;
+                double BytesSent2 = 0;
 
-                double BytesRecived = interfaceStatistics.BytesReceived;
-                double BytesSent = interfaceStatistics.BytesSent;
+                DataRow[] result = dt.Select($"Interface = '{idString + "-" + name}'");
+                foreach (DataRow row in result) {
+                    BytesRecived2 = Convert.ToDouble(row[1]);
+                    BytesSent2 = Convert.ToDouble(row[2]);
+                }
+
+                double BytesRecived = interfaceStatistics.BytesReceived + BytesRecived2;
+                double BytesSent = interfaceStatistics.BytesSent + BytesSent2;
 
                 string date = DateTime.Now.ToString("yyyy-MM-dd");
 
@@ -169,9 +174,12 @@ namespace BandwidthMonitor
             OpenConnection();
             
             dt.Clear();
-            dt.Columns.Add("Interface");
-            dt.Columns.Add("BytesRecived");
-            dt.Columns.Add("BytesSent");
+            //dt.Columns.Add("Interface");
+            //dt.Columns.Add("BytesRecived");
+            //dt.Columns.Add("BytesSent");
+            dt.Columns.Add(new DataColumn("Interface", typeof(string)));
+            dt.Columns.Add(new DataColumn("BytesRecived", typeof(double)));
+            dt.Columns.Add(new DataColumn("BytesSent", typeof(double)));
             string date = DateTime.Now.ToString("yyyy-MM-dd");
 
             foreach (NetworkInterface nic in interfaces) {
@@ -187,17 +195,18 @@ namespace BandwidthMonitor
                             double BytesRecived = double.Parse(rdr["BytesRecived"].ToString());
                             double BytesSent = double.Parse(rdr["BytesSent"].ToString());
 
-                            DataRow row3 = dt.NewRow();
-                            row3["Interface"] = idString + "-" + name;
-                            row3["BytesRecived"] = BytesRecived;
-                            row3["BytesSent"] = BytesSent;
-                            dt.Rows.Add(row3);
+                            //DataRow row3 = dt.NewRow();
+                            //row3["Interface"] = idString + "-" + name;
+                            //row3["BytesRecived"] = BytesRecived;
+                            //row3["BytesSent"] = BytesSent;
+                            //dt.Rows.Add(row3);
+                            dt.Rows.Add($"{idString + "-" + name}", BytesRecived, BytesSent);
                             }
                         }
                     }
             }
             CloseConnection();
-            //dt.WriteXml("dtSchemaOrStructure4.xml");
+            dt.WriteXml("dtSchemaOrStructure4.xml");
         }
        
     }
