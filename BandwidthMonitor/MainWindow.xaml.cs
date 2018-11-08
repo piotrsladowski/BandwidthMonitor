@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Net.NetworkInformation;
 using System.Net;//do pozyskania adresu IP
 using System.Data.SQLite;
+using System.Data;
 
 
 namespace BandwidthMonitor
@@ -46,7 +47,8 @@ namespace BandwidthMonitor
         {
             InitializeComponent();
             notifyIcon = new System.Windows.Forms.NotifyIcon();
-            notifyIcon.Icon = new System.Drawing.Icon(@"D:\Visual Studio\BandwidthMonitor\BandwidthMonitor\Resources\icon.ico");
+            //notifyIcon.Icon = new System.Drawing.Icon(@"D:\Visual Studio\BandwidthMonitor\BandwidthMonitor\Resources\icon.ico");
+            notifyIcon.Icon = new System.Drawing.Icon("icon.ico");
             notifyIcon.Text = "Bandwidth monitor";
             notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(NofityIcon_MouseDoubleClick);
         }
@@ -61,6 +63,7 @@ namespace BandwidthMonitor
             InitializeNetworkInterfaces();
             sqlite.InitBinding(intClass.usefulInterfaces3);
             sqlite.CheckIfAnyRowsExists(intClass.usefulInterfaces3);
+            sqlite.FillDataTable();
             sqlite.GetStatsOnStartup(intClass.usefulInterfaces3);
             InitTimer();
             InitTimerMinute();
@@ -190,7 +193,8 @@ namespace BandwidthMonitor
             GetLast7Days();
             GetLast30Days();
             sqlite.CheckIfCurrentDayExists(intClass.usefulInterfaces3);
-            
+            //DataSet dt = sqlite.FillDataTable();
+            //this.dataGrid1.ItemsSource = dt.Tables;
         }
 
         private void Window_StateChanged(object sender, EventArgs e)

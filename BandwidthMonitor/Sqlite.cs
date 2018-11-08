@@ -7,15 +7,14 @@ using System.Windows;
 using System.Data.SQLite;
 using System.Data;
 using System.Net.NetworkInformation;
-using SqlKata;
 
 namespace BandwidthMonitor
 {
     public class Sqlite : InterfacesClass
     {
-        SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=D:\Visual Studio\BandwidthMonitor\BandwidthMonitor\bin\Debug\MyDB.sqlite;Version=3;");
+        SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=MyDB.sqlite;Version=3;");
         DataTable dt = new DataTable { TableName = "MyTableName" };
-        DataTable compareBytes = new DataTable { TableName = "MyTable2" };
+        List<string> interfacesFromDatabase = new List<string>();
 
         private void OpenConnection()
         {
@@ -36,12 +35,12 @@ namespace BandwidthMonitor
         {
             m_dbConnection.Open();
 
-            foreach(NetworkInterface ni in interfaces) {
+            foreach (NetworkInterface ni in interfaces) {
                 string niID = ni.Id + "-" + ni.Name;
                 string createTable = $"CREATE TABLE IF NOT EXISTS '{niID}' (Id INTEGER PRIMARY KEY AUTOINCREMENT, Day datetime_text , BytesRecived DOUBLE, BytesSent DOUBLE, Total DOUBLE)";
                 CommandExecuteNonQuery(createTable, m_dbConnection);
             }
-            
+
             //string sql = "CREATE TABLE IF NOT EXISTS UsefulInterfaces (Id INTEGER PRIMARY KEY AUTOINCREMENT, IdString STRING NOT NULL UNIQUE, IntName STRING  NOT NULL, BytesRecived DOUBLE, BytesSent    DOUBLE)";
             //CommandExecuteNonQuery(sql, m_dbConnection);
 
@@ -54,26 +53,24 @@ namespace BandwidthMonitor
                 string howMany = $"SELECT COUNT(*) from '{ni.Id + "-" + ni.Name}'";
                 SQLiteCommand command = new SQLiteCommand(howMany, m_dbConnection);
                 int result = int.Parse(command.ExecuteScalar().ToString());
-                if(result == 0) {
+                if (result == 0) {
                     string date = DateTime.Now.ToString("yyyy-MM-dd");
                     string insertFirstDateRow = $"INSERT INTO '{ni.Id + "-" + ni.Name}' (Day, BytesRecived, BytesSent, Total) values ('{date}', 0, 0, 0)";
                     CommandExecuteNonQuery(insertFirstDateRow, m_dbConnection);
                 }
             }
             CloseConnection();
-            
+
         }
         public void CheckIfCurrentDayExists(List<NetworkInterface> interfaces)
         {
             OpenConnection();
-            foreach(NetworkInterface ni in interfaces)
-            {
+            foreach (NetworkInterface ni in interfaces) {
                 string getLastRow = $"SELECT Day FROM '{ni.Id + "-" + ni.Name}' ORDER BY Id DESC LIMIT 1 ";
                 SQLiteCommand command = new SQLiteCommand(getLastRow, m_dbConnection);
                 object result = command.ExecuteScalar();
                 string date = DateTime.Now.ToString("yyyy-MM-dd");
-                if (result.ToString() != date)
-                {
+                if (result.ToString() != date) {
                     string insertFirstDateRow = $"INSERT INTO '{ni.Id + "-" + ni.Name}' (Day, BytesRecived, BytesSent, Total) values ('{date}', 0, 0, 0)";
                     CommandExecuteNonQuery(insertFirstDateRow, m_dbConnection);
                 }
@@ -99,7 +96,7 @@ namespace BandwidthMonitor
             }
             catch (Exception) {
 
-                
+
             }
             Bytes[0] = BytesRecived;
             Bytes[1] = BytesSent;
@@ -124,7 +121,7 @@ namespace BandwidthMonitor
                     }
                 }
             }
-            catch (Exception) {  
+            catch (Exception) {
             }
             Bytes[0] = BytesRecived;
             Bytes[1] = BytesSent;
@@ -135,11 +132,6 @@ namespace BandwidthMonitor
         public void Update(List<NetworkInterface> UsefulInterfaces)
         {
             OpenConnection();
-            if (compareBytes.Columns.Contains("Interface") == false) {
-                compareBytes.Columns.Add("Interface");
-                compareBytes.Columns.Add("BytesRecived");
-                compareBytes.Columns.Add("BytesSent");
-            }
 
             foreach (NetworkInterface nic in UsefulInterfaces) {
                 string name = nic.Name;
@@ -166,48 +158,77 @@ namespace BandwidthMonitor
                 SQLiteCommand command = new SQLiteCommand(update, m_dbConnection);
                 command.ExecuteNonQuery();
             }
-            //CommandExecuteNonQuery(update, m_dbConnection);
             CloseConnection();
         }
         public void GetStatsOnStartup(List<NetworkInterface> interfaces)
         {
             OpenConnection();
-            
+
             dt.Clear();
-            //dt.Columns.Add("Interface");
-            //dt.Columns.Add("BytesRecived");
-            //dt.Columns.Add("BytesSent");
             dt.Columns.Add(new DataColumn("Interface", typeof(string)));
             dt.Columns.Add(new DataColumn("BytesRecived", typeof(double)));
             dt.Columns.Add(new DataColumn("BytesSent", typeof(double)));
             string date = DateTime.Now.ToString("yyyy-MM-dd");
-
+            /*
             foreach (NetworkInterface nic in interfaces) {
-                    string name = nic.Name;
-                    string idString = nic.Id;
+                string name = nic.Name;
+                string idString = nic.Id;
 
-                    string selectOnStartup = $"SELECT * FROM '{idString + "-" + name}' WHERE Day = '{date}'";
-                    using (SQLiteCommand cmd = new SQLiteCommand(selectOnStartup, m_dbConnection)) {
-                        using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                string selectOnStartup = $"SELECT * FROM '{idString + "-" + name}' WHERE Day = '{date}'";
+                using (SQLiteCommand cmd = new SQLiteCommand(selectOnStartup, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
 
-                            while (rdr.Read()) {
-                                                            
+                        while (rdr.Read()) {
                             double BytesRecived = double.Parse(rdr["BytesRecived"].ToString());
                             double BytesSent = double.Parse(rdr["BytesSent"].ToString());
-
-                            //DataRow row3 = dt.NewRow();
-                            //row3["Interface"] = idString + "-" + name;
-                            //row3["BytesRecived"] = BytesRecived;
-                            //row3["BytesSent"] = BytesSent;
-                            //dt.Rows.Add(row3);
                             dt.Rows.Add($"{idString + "-" + name}", BytesRecived, BytesSent);
-                            }
                         }
                     }
+                }
+            }*/
+            
+            for(int i = 1; i < interfacesFromDatabase.Count; i++) {
+                string nameAndId = interfacesFromDatabase[i];
+                string selectOnStartup = $"SELECT * FROM '{nameAndId}' WHERE Day = '{date}'";
+                using (SQLiteCommand cmd = new SQLiteCommand(selectOnStartup, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+
+                        while (rdr.Read()) {
+                            double BytesRecived = double.Parse(rdr["BytesRecived"].ToString());
+                            double BytesSent = double.Parse(rdr["BytesSent"].ToString());
+                            dt.Rows.Add($"{nameAndId}", BytesRecived, BytesSent);
+                        }
+                    }
+                }
             }
+
             CloseConnection();
-            dt.WriteXml("dtSchemaOrStructure4.xml");
+            //dt.WriteXml("dtSchemaOrStructure4.xml");
         }
-       
+        public void FillDataTable()
+        {
+            /*
+            //string query = "SELECT name FROM sqlite_master where type='table' order by name";
+            SQLiteCommand command = new SQLiteCommand("SELECT name FROM sqlite_master where type='table' order by name", m_dbConnection);
+            SQLiteDataAdapter myAdapter = new SQLiteDataAdapter(command);
+            DataSet myDataSet = new DataSet();
+            myAdapter.Fill(myDataSet, "name");
+            //MessageBox.Show("xD0");
+            return myDataSet;
+            */
+
+            OpenConnection();
+            string stm = @"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
+            using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                    while (rdr.Read()) {
+                        interfacesFromDatabase.Add(rdr.GetString(0));
+                    }
+                }
+
+            }
+            //MessageBox.Show(interfacesFromDatabase[0]);
+            CloseConnection();
+        }
     }
 }
