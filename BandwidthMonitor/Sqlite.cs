@@ -12,7 +12,7 @@ namespace BandwidthMonitor
 {
     public class Sqlite : InterfacesClass
     {
-        SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=MyDB.sqlite;Version=3;");
+        SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=Resources\MyDB.sqlite;Version=3;");
         DataTable dt = new DataTable { TableName = "MyTableName" };
         List<string> interfacesFromDatabase = new List<string>();
 
