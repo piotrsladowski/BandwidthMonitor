@@ -16,6 +16,8 @@ using System.Net.NetworkInformation;
 using System.Net;//do pozyskania adresu IP
 using System.Data.SQLite;
 using System.Data;
+using System.Windows.Forms;
+using System.Drawing;
 
 
 namespace BandwidthMonitor
@@ -42,6 +44,7 @@ namespace BandwidthMonitor
         private System.Windows.Threading.DispatcherTimer dispatcherTimerMinute;
         //To rememer selected item after refreshing interfaces list
         private int lastSelectedItem = 0;
+        System.Windows.Forms.NotifyIcon _notifyIcon;
 
         public MainWindow()
         {
@@ -51,6 +54,29 @@ namespace BandwidthMonitor
             notifyIcon.Icon = new System.Drawing.Icon("icon.ico");
             notifyIcon.Text = "Bandwidth monitor";
             notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(NofityIcon_MouseDoubleClick);
+
+            //_notifyIcon = new System.Windows.Forms.NotifyIcon();
+            //_notifyIcon.DoubleClick += _notifyIcon_DoubleClick;
+            //_notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(NofityIcon_MouseDoubleClick);
+            //_notifyIcon.Icon = new System.Drawing.Icon("icon.ico");
+            //_notifyIcon.Visible = true;
+        }
+
+        void _notifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            if (IsVisible) {
+                Activate();
+            }
+            else {
+                Show();
+            }
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            // Don't close the window, as you can't reopen it again. Just hide it.
+            e.Cancel = true;
+            Hide();
         }
         void NofityIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
@@ -199,6 +225,7 @@ namespace BandwidthMonitor
 
         private void Window_StateChanged(object sender, EventArgs e)
         {
+            
             try {
                 if (this.WindowState == WindowState.Minimized) {
                     this.ShowInTaskbar = false;

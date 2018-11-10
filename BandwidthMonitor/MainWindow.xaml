@@ -7,40 +7,44 @@
         mc:Ignorable="d"
         Title="Bandwidth Monitor" Height="329.125" Width="537"
         Loaded="MainWindows_Loaded" StateChanged="Window_StateChanged" Activated="Window_Activated" Deactivated="Window_Deactivated" Icon="Resources/icon.ico">
-  <Grid Margin="0,0,27,22">
-    <ComboBox x:Name="cb_Interfaces" HorizontalAlignment="Left" Margin="159,10,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="cb_Interfaces_SelectionChanged"/>
-    <Label Content="Choose interface:" HorizontalAlignment="Left" Margin="20,10,0,0" VerticalAlignment="Top" Width="119"/>
-    <Label x:Name="label_IPAdress" Content="IP Address:" HorizontalAlignment="Left" Margin="10,233,0,0" VerticalAlignment="Top" Width="90"/>
-    <Label x:Name="label_IPAddress_Value" Content="Label" HorizontalAlignment="Left" Margin="105,233,0,0" VerticalAlignment="Top" Width="100"/>
-    <Grid HorizontalAlignment="Left" Height="145" Margin="20,44,0,0" VerticalAlignment="Top" Width="490">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="90" />
-        <ColumnDefinition Width="100" />
-        <ColumnDefinition Width="100" />
-        <ColumnDefinition Width="100" />
-        <ColumnDefinition Width="100" />
-      </Grid.ColumnDefinitions>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="28" />
-      </Grid.RowDefinitions>
-      <Label Grid.Row="0" Grid.Column="1" Content="Day" HorizontalAlignment="Center"/>
-      <Label Grid.Row="0" Grid.Column="2" Content="Week" HorizontalAlignment="Center"/>
-      <Label Grid.Row="0" Grid.Column="3" Content="Month" HorizontalAlignment="Center"/>
-      <Label Grid.Row="0" Grid.Column="4" Content="Total" HorizontalAlignment="Center"/>
-      <Label Grid.Row="1" Grid.Column="0" Content="Bytes Recived:" HorizontalAlignment="Center"/>
-      <Label Grid.Row="2" Grid.Column="0" Content="Bytes Sent:" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesRecivedDay" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesRecivedWeek" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesRecivedMonth" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesRecivedTotal" Grid.Row="1" Grid.Column="4" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesSentDay" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesSentWeek" Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesSentMonth" Grid.Row="2" Grid.Column="3" HorizontalAlignment="Center"/>
-      <Label x:Name="label_BytesSentTotal" Grid.Row="2" Grid.Column="4" HorizontalAlignment="Center"/>
-    </Grid>
+    <Grid Margin="0,0,27,22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="17*"/>
+            <RowDefinition Height="75*"/>
+        </Grid.RowDefinitions>
+        <ComboBox x:Name="cb_Interfaces" HorizontalAlignment="Left" Margin="159,10,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="cb_Interfaces_SelectionChanged"/>
+        <Label Content="Choose interface:" HorizontalAlignment="Left" Margin="20,10,0,0" VerticalAlignment="Top" Width="119"/>
+        <Label x:Name="label_IPAdress" Content="IP Address:" HorizontalAlignment="Left" Margin="10,182,0,0" VerticalAlignment="Top" Width="90" Grid.Row="1"/>
+        <Label x:Name="label_IPAddress_Value" Content="Label" HorizontalAlignment="Left" Margin="105,182,0,0" VerticalAlignment="Top" Width="100" Grid.Row="1"/>
+        <Grid HorizontalAlignment="Left" Height="145" Margin="20,44,-8,0" VerticalAlignment="Top" Width="490" Grid.RowSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="90" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="28" />
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Grid.Column="1" Content="Day" HorizontalAlignment="Center"/>
+            <Label Grid.Row="0" Grid.Column="2" Content="Week" HorizontalAlignment="Center"/>
+            <Label Grid.Row="0" Grid.Column="3" Content="Month" HorizontalAlignment="Center"/>
+            <Label Grid.Row="0" Grid.Column="4" Content="Total" HorizontalAlignment="Center"/>
+            <Label Grid.Row="1" Grid.Column="0" Content="Bytes Recived:" HorizontalAlignment="Center"/>
+            <Label Grid.Row="2" Grid.Column="0" Content="Bytes Sent:" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesRecivedDay" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesRecivedWeek" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesRecivedMonth" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesRecivedTotal" Grid.Row="1" Grid.Column="4" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesSentDay" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesSentWeek" Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesSentMonth" Grid.Row="2" Grid.Column="3" HorizontalAlignment="Center"/>
+            <Label x:Name="label_BytesSentTotal" Grid.Row="2" Grid.Column="4" HorizontalAlignment="Center"/>
+        </Grid>
 
-  </Grid>
+    </Grid>
 </Window>
