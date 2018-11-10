@@ -7,13 +7,14 @@ using System.Windows;
 using System.Data.SQLite;
 using System.Data;
 using System.Net.NetworkInformation;
-using SqlKata;
 
 namespace BandwidthMonitor
 {
     public class Sqlite : InterfacesClass
     {
-        SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=D:\Visual Studio\BandwidthMonitor\BandwidthMonitor\bin\Debug\MyDB.sqlite;Version=3;");
+        SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=Resources\MyDB.sqlite;Version=3;");
+        DataTable dt = new DataTable { TableName = "MyTableName" };
+        List<string> interfacesFromDatabase = new List<string>();
 
         private void OpenConnection()
         {
@@ -34,18 +35,16 @@ namespace BandwidthMonitor
         {
             m_dbConnection.Open();
 
-            foreach(NetworkInterface ni in interfaces) {
+            foreach (NetworkInterface ni in interfaces) {
                 string niID = ni.Id + "-" + ni.Name;
                 string createTable = $"CREATE TABLE IF NOT EXISTS '{niID}' (Id INTEGER PRIMARY KEY AUTOINCREMENT, Day datetime_text , BytesRecived DOUBLE, BytesSent DOUBLE, Total DOUBLE)";
                 CommandExecuteNonQuery(createTable, m_dbConnection);
             }
-            
-            string sql = "CREATE TABLE IF NOT EXISTS UsefulInterfaces (Id INTEGER PRIMARY KEY AUTOINCREMENT, IdString STRING NOT NULL UNIQUE, IntName STRING  NOT NULL, BytesRecived DOUBLE, BytesSent    DOUBLE)";
 
-            CommandExecuteNonQuery(sql, m_dbConnection);
+            //string sql = "CREATE TABLE IF NOT EXISTS UsefulInterfaces (Id INTEGER PRIMARY KEY AUTOINCREMENT, IdString STRING NOT NULL UNIQUE, IntName STRING  NOT NULL, BytesRecived DOUBLE, BytesSent    DOUBLE)";
+            //CommandExecuteNonQuery(sql, m_dbConnection);
 
             m_dbConnection.Close();
-            UpdateDay();
         }
         public void CheckIfAnyRowsExists(List<NetworkInterface> interfaces)
         {
@@ -54,99 +53,103 @@ namespace BandwidthMonitor
                 string howMany = $"SELECT COUNT(*) from '{ni.Id + "-" + ni.Name}'";
                 SQLiteCommand command = new SQLiteCommand(howMany, m_dbConnection);
                 int result = int.Parse(command.ExecuteScalar().ToString());
-                if(result == 2) {
+                if (result == 0) {
                     string date = DateTime.Now.ToString("yyyy-MM-dd");
-
                     string insertFirstDateRow = $"INSERT INTO '{ni.Id + "-" + ni.Name}' (Day, BytesRecived, BytesSent, Total) values ('{date}', 0, 0, 0)";
                     CommandExecuteNonQuery(insertFirstDateRow, m_dbConnection);
                 }
             }
             CloseConnection();
-            
-        }
 
-        public void GetLastWeek(NetworkInterface interfejs)
+        }
+        public void CheckIfCurrentDayExists(List<NetworkInterface> interfaces)
         {
             OpenConnection();
-            string howMany = $"SELECT COUNT(*) from '{interfejs.Id + "-" + interfejs.Name}'";
-            SQLiteCommand command = new SQLiteCommand(howMany, m_dbConnection);
-            int result = int.Parse(command.ExecuteScalar().ToString());
-            /*for(int i = 0; i < 7; i++) {
-                string getLat7Items = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY BytesRecived DESC LIMIT 7";
-                DataTable dataTable = new DataTable("dfs");
-                DataColumn dataColumn = new DataColumn();
-                //dataTable.Columns.Add(dataColumn);
-                
-                SQLiteCommand command2 = new SQLiteCommand(getLat7Items, m_dbConnection);
-                SQLiteDataAdapter da = new SQLiteDataAdapter(command2);
-                da.Fill(dataTable);
-                DataRow[] result3 = dataTable.Select("Day = '2018-10-13' AND BytesRecived = 0");
-                foreach(DataRow row in result3) {
-                    MessageBox.Show(row[1].ToString());
+            foreach (NetworkInterface ni in interfaces) {
+                string getLastRow = $"SELECT Day FROM '{ni.Id + "-" + ni.Name}' ORDER BY Id DESC LIMIT 1 ";
+                SQLiteCommand command = new SQLiteCommand(getLastRow, m_dbConnection);
+                object result = command.ExecuteScalar();
+                string date = DateTime.Now.ToString("yyyy-MM-dd");
+                if (result.ToString() != date) {
+                    string insertFirstDateRow = $"INSERT INTO '{ni.Id + "-" + ni.Name}' (Day, BytesRecived, BytesSent, Total) values ('{date}', 0, 0, 0)";
+                    CommandExecuteNonQuery(insertFirstDateRow, m_dbConnection);
                 }
-                MessageBox.Show(result3.ElementAt(0).ToString());
-            }*/
-            string stm = "SELECT * FROM '{B248262D-03F9-4997-BB84-A243C3B03577}-Wi-Fi' LIMIT 7";
-            using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection))
-            {
-                using (SQLiteDataReader rdr = cmd.ExecuteReader())
-                {
-                    while (rdr.Read())
-                    {
-                        //MessageBox.Show(rdr["BytesRecived"].ToString());
+            }
+            CloseConnection();
+        }
+        public double[] GetLast7Days(NetworkInterface interfejs)
+        {
+            OpenConnection();
+            double[] Bytes = new double[2];
+            string stm = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY Id DESC LIMIT 7";
+            double BytesRecived = 0;
+            double BytesSent = 0;
+            try {
+                using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                        while (rdr.Read()) {
+                            BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
+                            BytesSent += double.Parse(rdr["BytesSent"].ToString());
+                        }
                     }
                 }
             }
-            CloseConnection();
-        }
+            catch (Exception) {
 
-        //Checks if interface exists and adds if not
-        public void AddInterfaces(List<NetworkInterface> UsefulInterface)
-        {
-            OpenConnection();
-            foreach (NetworkInterface nic in UsefulInterface) {
-                string name = nic.Name;
-                string idString = nic.Id;
-                
-
-                //string sql = $"IF * NOT EXISTS (SELECT 1 FROM UsefulInterfaces WHERE IntName = '{name}') BEGIN INSERT INTO UsefulInterfaces (IntName) VALUES ('{name}') END";
-                string sql = $"SELECT * FROM UsefulInterfaces WHERE IdString = '{idString}'";
-                //string sql = "select * from usefulinterfaces order by intName desc";
-                //SQLiteCommand command = new SQLiteCommand(query.ToString(), m_dbConnection);
-                SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
-                SQLiteDataReader reader = command.ExecuteReader();
-
-                if(reader.HasRows == false) {
-                    string insert = $"INSERT INTO UsefulInterfaces (IntName, IdString, MegaBytesRecived, MegaBytesSent) values ('{name}', '{idString}', 0, 0)";
-                    SQLiteCommand commandInsertInterfaces = new SQLiteCommand(insert, m_dbConnection);
-                    commandInsertInterfaces.ExecuteNonQuery();
-                }
 
             }
-
-            
-
-            //string dupa = "fds";
-            //string sql = $"IF NOT EXISTS (SELECT 1 FROM UsefulInterfaces WHERE name = '{dupa}')";
-            //MessageBox.Show("fd");
+            Bytes[0] = BytesRecived;
+            Bytes[1] = BytesSent;
             CloseConnection();
+            return Bytes;
         }
 
+        public double[] GetLast30Days(NetworkInterface interfejs)
+        {
+            OpenConnection();
+            double[] Bytes = new double[2];
+            string stm = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY Id DESC LIMIT 30";
+            double BytesRecived = 0;
+            double BytesSent = 0;
+            try {
+                using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                        while (rdr.Read()) {
+                            BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
+                            BytesSent += double.Parse(rdr["BytesSent"].ToString());
+                        }
+                    }
+                }
+            }
+            catch (Exception) {
+            }
+            Bytes[0] = BytesRecived;
+            Bytes[1] = BytesSent;
+            CloseConnection();
+            return Bytes;
+        }
+        //Jak program jest włączany jeszcze raz, bez restartu systemu, to nie działa
         public void Update(List<NetworkInterface> UsefulInterfaces)
         {
             OpenConnection();
 
-            foreach(NetworkInterface nic in UsefulInterfaces) {
+            foreach (NetworkInterface nic in UsefulInterfaces) {
                 string name = nic.Name;
                 string idString = nic.Id;
 
                 IPv4InterfaceStatistics interfaceStatistics = nic.GetIPv4Statistics();
 
-                double MegaBytesRecived = Math.Round((interfaceStatistics.BytesReceived) / (Math.Pow(1024, 2)), 2);//później do usunięcia
-                double MegaBytesSent = Math.Round((interfaceStatistics.BytesSent) / (Math.Pow(1024, 2)), 2);
+                double BytesRecived2 = 0;
+                double BytesSent2 = 0;
 
-                double BytesRecived = interfaceStatistics.BytesReceived;
-                double BytesSent = interfaceStatistics.BytesSent;
+                DataRow[] result = dt.Select($"Interface = '{idString + "-" + name}'");
+                foreach (DataRow row in result) {
+                    BytesRecived2 = Convert.ToDouble(row[1]);
+                    BytesSent2 = Convert.ToDouble(row[2]);
+                }
+
+                double BytesRecived = interfaceStatistics.BytesReceived + BytesRecived2;
+                double BytesSent = interfaceStatistics.BytesSent + BytesSent2;
 
                 string date = DateTime.Now.ToString("yyyy-MM-dd");
 
@@ -155,26 +158,77 @@ namespace BandwidthMonitor
                 SQLiteCommand command = new SQLiteCommand(update, m_dbConnection);
                 command.ExecuteNonQuery();
             }
-
-            //string update = "update UsefulInterfaces SET IntName = 'dupa'";
-            // WHERE IdString = '{ACDC777C-24A4-421C-AB79-9CF5496BC780}'";
-
-
-            //CommandExecuteNonQuery(update, m_dbConnection);
             CloseConnection();
         }
-        public void UpdateDay()
+        public void GetStatsOnStartup(List<NetworkInterface> interfaces)
         {
-            //date = DateTime.Now.ToString("yyyy-MM-dd");
-            //var dateAndTime = DateTime.Now;
-            // var date = dateAndTime.ToShortDateString();
-            //MessageBox.Show(date.ToString());
+            OpenConnection();
 
+            dt.Clear();
+            dt.Columns.Add(new DataColumn("Interface", typeof(string)));
+            dt.Columns.Add(new DataColumn("BytesRecived", typeof(double)));
+            dt.Columns.Add(new DataColumn("BytesSent", typeof(double)));
+            string date = DateTime.Now.ToString("yyyy-MM-dd");
+            /*
+            foreach (NetworkInterface nic in interfaces) {
+                string name = nic.Name;
+                string idString = nic.Id;
+
+                string selectOnStartup = $"SELECT * FROM '{idString + "-" + name}' WHERE Day = '{date}'";
+                using (SQLiteCommand cmd = new SQLiteCommand(selectOnStartup, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+
+                        while (rdr.Read()) {
+                            double BytesRecived = double.Parse(rdr["BytesRecived"].ToString());
+                            double BytesSent = double.Parse(rdr["BytesSent"].ToString());
+                            dt.Rows.Add($"{idString + "-" + name}", BytesRecived, BytesSent);
+                        }
+                    }
+                }
+            }*/
+            
+            for(int i = 1; i < interfacesFromDatabase.Count; i++) {
+                string nameAndId = interfacesFromDatabase[i];
+                string selectOnStartup = $"SELECT * FROM '{nameAndId}' WHERE Day = '{date}'";
+                using (SQLiteCommand cmd = new SQLiteCommand(selectOnStartup, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+
+                        while (rdr.Read()) {
+                            double BytesRecived = double.Parse(rdr["BytesRecived"].ToString());
+                            double BytesSent = double.Parse(rdr["BytesSent"].ToString());
+                            dt.Rows.Add($"{nameAndId}", BytesRecived, BytesSent);
+                        }
+                    }
+                }
+            }
+
+            CloseConnection();
+            //dt.WriteXml("dtSchemaOrStructure4.xml");
         }
-        public void GetStatsOnStartup()
+        public void FillDataTable()
         {
+            /*
+            //string query = "SELECT name FROM sqlite_master where type='table' order by name";
+            SQLiteCommand command = new SQLiteCommand("SELECT name FROM sqlite_master where type='table' order by name", m_dbConnection);
+            SQLiteDataAdapter myAdapter = new SQLiteDataAdapter(command);
+            DataSet myDataSet = new DataSet();
+            myAdapter.Fill(myDataSet, "name");
+            //MessageBox.Show("xD0");
+            return myDataSet;
+            */
 
+            OpenConnection();
+            string stm = @"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
+            using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                    while (rdr.Read()) {
+                        interfacesFromDatabase.Add(rdr.GetString(0));
+                    }
+                }
+
+            }
+            //MessageBox.Show(interfacesFromDatabase[0]);
+            CloseConnection();
         }
-       
     }
 }
