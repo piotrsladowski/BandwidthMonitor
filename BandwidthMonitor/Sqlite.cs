@@ -14,6 +14,7 @@ namespace BandwidthMonitor
     {
         SQLiteConnection m_dbConnection = new SQLiteConnection(@"Data Source=Resources\MyDB.sqlite;Version=3;");
         DataTable dt = new DataTable { TableName = "MyTableName" };
+        DataTable dt2 = new DataTable { TableName = "Table2" };
         List<string> interfacesFromDatabase = new List<string>();
 
         private void OpenConnection()
@@ -77,6 +78,33 @@ namespace BandwidthMonitor
             }
             CloseConnection();
         }
+
+        public double[] GetDay(NetworkInterface interfejs)
+        {
+            OpenConnection();
+            double[] Bytes = new double[2];
+            string stm = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}' ORDER BY Id DESC LIMIT 1";
+            double BytesRecived = 0;
+            double BytesSent = 0;
+            try {
+                using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                        while (rdr.Read()) {
+                            BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
+                            BytesSent += double.Parse(rdr["BytesSent"].ToString());
+                        }
+                    }
+                }
+            }
+            catch (Exception) {
+
+
+            }
+            Bytes[0] = BytesRecived;
+            Bytes[1] = BytesSent;
+            CloseConnection();
+            return Bytes;
+        }
         public double[] GetLast7Days(NetworkInterface interfejs)
         {
             OpenConnection();
@@ -128,7 +156,30 @@ namespace BandwidthMonitor
             CloseConnection();
             return Bytes;
         }
-        //Jak program jest włączany jeszcze raz, bez restartu systemu, to nie działa
+        public double[] GetTotal(NetworkInterface interfejs)
+        {
+            OpenConnection();
+            double[] Bytes = new double[2];
+            string stm = $"SELECT * FROM '{interfejs.Id + "-" + interfejs.Name}'";
+            double BytesRecived = 0;
+            double BytesSent = 0;
+            try {
+                using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
+                        while (rdr.Read()) {
+                            BytesRecived += double.Parse(rdr["BytesRecived"].ToString());
+                            BytesSent += double.Parse(rdr["BytesSent"].ToString());
+                        }
+                    }
+                }
+            }
+            catch (Exception) {
+            }
+            Bytes[0] = BytesRecived;
+            Bytes[1] = BytesSent;
+            CloseConnection();
+            return Bytes;
+        }
         public void Update(List<NetworkInterface> UsefulInterfaces)
         {
             OpenConnection();
@@ -142,14 +193,23 @@ namespace BandwidthMonitor
                 double BytesRecived2 = 0;
                 double BytesSent2 = 0;
 
+                double BytesRecivedOnStart = 0;
+                double BytesSentOnStart = 0;
+
                 DataRow[] result = dt.Select($"Interface = '{idString + "-" + name}'");
                 foreach (DataRow row in result) {
                     BytesRecived2 = Convert.ToDouble(row[1]);
                     BytesSent2 = Convert.ToDouble(row[2]);
                 }
+                DataRow[] result2 = dt2.Select($"Interface = '{idString + "-" + name}'");
+                foreach (DataRow row in result) {
+                    BytesRecivedOnStart = Convert.ToDouble(row[1]);
+                    BytesSentOnStart = Convert.ToDouble(row[2]);
+                }
 
-                double BytesRecived = interfaceStatistics.BytesReceived + BytesRecived2;
-                double BytesSent = interfaceStatistics.BytesSent + BytesSent2;
+                double BytesRecived = interfaceStatistics.BytesReceived + BytesRecived2 - BytesRecivedOnStart;
+                double BytesSent = interfaceStatistics.BytesSent + BytesSent2 - BytesSentOnStart;
+
 
                 string date = DateTime.Now.ToString("yyyy-MM-dd");
 
@@ -163,29 +223,26 @@ namespace BandwidthMonitor
         public void GetStatsOnStartup(List<NetworkInterface> interfaces)
         {
             OpenConnection();
+            //Checks if vaulues of int stats are bigger than 0. For example if program has been restarted
+            dt2.Clear();
+            dt2.Columns.Add(new DataColumn("Interface", typeof(string)));
+            dt2.Columns.Add(new DataColumn("BytesRecived", typeof(double)));
+            dt2.Columns.Add(new DataColumn("BytesSent", typeof(double)));
+            foreach (NetworkInterface nic in interfaces) {
+                IPv4InterfaceStatistics interfaceStatistics = nic.GetIPv4Statistics();
+                if(interfaceStatistics.BytesReceived != 0) {
+                    string nameAndId = nic.Id + "-" + nic.Name;
+                    double BytesRecived = interfaceStatistics.BytesReceived;
+                    double BytesSent = interfaceStatistics.BytesSent;
+                    dt2.Rows.Add($"{nameAndId}", BytesRecived, BytesSent);
+                }
+            }
 
             dt.Clear();
             dt.Columns.Add(new DataColumn("Interface", typeof(string)));
             dt.Columns.Add(new DataColumn("BytesRecived", typeof(double)));
             dt.Columns.Add(new DataColumn("BytesSent", typeof(double)));
             string date = DateTime.Now.ToString("yyyy-MM-dd");
-            /*
-            foreach (NetworkInterface nic in interfaces) {
-                string name = nic.Name;
-                string idString = nic.Id;
-
-                string selectOnStartup = $"SELECT * FROM '{idString + "-" + name}' WHERE Day = '{date}'";
-                using (SQLiteCommand cmd = new SQLiteCommand(selectOnStartup, m_dbConnection)) {
-                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) {
-
-                        while (rdr.Read()) {
-                            double BytesRecived = double.Parse(rdr["BytesRecived"].ToString());
-                            double BytesSent = double.Parse(rdr["BytesSent"].ToString());
-                            dt.Rows.Add($"{idString + "-" + name}", BytesRecived, BytesSent);
-                        }
-                    }
-                }
-            }*/
             
             for(int i = 1; i < interfacesFromDatabase.Count; i++) {
                 string nameAndId = interfacesFromDatabase[i];
@@ -207,16 +264,6 @@ namespace BandwidthMonitor
         }
         public void FillDataTable()
         {
-            /*
-            //string query = "SELECT name FROM sqlite_master where type='table' order by name";
-            SQLiteCommand command = new SQLiteCommand("SELECT name FROM sqlite_master where type='table' order by name", m_dbConnection);
-            SQLiteDataAdapter myAdapter = new SQLiteDataAdapter(command);
-            DataSet myDataSet = new DataSet();
-            myAdapter.Fill(myDataSet, "name");
-            //MessageBox.Show("xD0");
-            return myDataSet;
-            */
-
             OpenConnection();
             string stm = @"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
             using (SQLiteCommand cmd = new SQLiteCommand(stm, m_dbConnection)) {
@@ -227,7 +274,6 @@ namespace BandwidthMonitor
                 }
 
             }
-            //MessageBox.Show(interfacesFromDatabase[0]);
             CloseConnection();
         }
     }

@@ -4,3 +4,7 @@
 
 /Nowy folder
 /.vs
+/BandwidthMonitor/obj/Debug
+/BandwidthMonitor/obj/Release
+/BandwidthMonitor/bin/Release
+/BandwidthMonitor/bin/Debug

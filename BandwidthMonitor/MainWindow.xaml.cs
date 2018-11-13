@@ -13,11 +13,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Net.NetworkInformation;
-using System.Net;//do pozyskania adresu IP
-using System.Data.SQLite;
-using System.Data;
-using System.Windows.Forms;
-using System.Drawing;
 
 
 namespace BandwidthMonitor
@@ -162,10 +157,10 @@ namespace BandwidthMonitor
             IPv4InterfaceStatistics interfaceStatistics = nic.GetIPv4Statistics();
 
             double BytesRecived = Math.Round((interfaceStatistics.BytesReceived)/(Math.Pow(1024,2)),2);
-            label_BytesRecivedDay.Content = BytesRecived.ToString() + "MB";
+            label_BytesRecivedSinceStartup.Content = BytesRecived.ToString() + "MB";
 
             double BytesSent = Math.Round((interfaceStatistics.BytesSent) / (Math.Pow(1024, 2)), 2);
-            label_BytesSentDay.Content = BytesSent.ToString() + "MB";
+            label_BytesSentSinceStartup.Content = BytesSent.ToString() + "MB";
 
 
             foreach (UnicastIPAddressInformation ip in nic.GetIPProperties().UnicastAddresses) {
@@ -192,8 +187,10 @@ namespace BandwidthMonitor
             //UpdateDatabase();
             //Sqlite sq = new Sqlite();
             sqlite.Update(intClass.usefulInterfaces3);
+            GetDay();
             GetLast7Days();
             GetLast30Days();
+            GetTotal();
             sqlite.CheckIfCurrentDayExists(intClass.usefulInterfaces3);
         }
 
@@ -238,14 +235,21 @@ namespace BandwidthMonitor
         {
             lastSelectedItem = cb_Interfaces.SelectedIndex;
             UpdateNetworkInterfacesLabels();
+            GetDay();
             GetLast7Days();
             GetLast30Days();
+            GetTotal();
+        }
+        private void GetDay()
+        {
+            double[] Bytes = sqlite.GetDay(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
+            double BytesRecived = Math.Round((Bytes[0]) / (Math.Pow(1024, 2)), 2);
+            double BytesSent = Math.Round((Bytes[1]) / (Math.Pow(1024, 2)), 2);
+            label_BytesRecivedDay.Content = BytesRecived.ToString() + "MB";
+            label_BytesSentDay.Content = BytesSent.ToString() + "MB";
         }
         private void GetLast7Days()
         {
-            Sqlite sqlite = new Sqlite();
-
-
             double[] Bytes = sqlite.GetLast7Days(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
             double BytesRecived = Math.Round((Bytes[0]) / (Math.Pow(1024, 2)), 2);
             double BytesSent = Math.Round((Bytes[1]) / (Math.Pow(1024, 2)), 2);
@@ -254,13 +258,19 @@ namespace BandwidthMonitor
         }
         private void GetLast30Days()
         {
-            Sqlite sq = new Sqlite();
-
-            double[] Bytes = sq.GetLast30Days(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
+            double[] Bytes = sqlite.GetLast30Days(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
             double BytesRecived = Math.Round((Bytes[0]) / (Math.Pow(1024, 2)), 2);
             double BytesSent = Math.Round((Bytes[1]) / (Math.Pow(1024, 2)), 2);
             label_BytesRecivedMonth.Content = BytesRecived.ToString() + "MB";
             label_BytesSentMonth.Content = BytesSent.ToString() + "MB";
+        }
+        private void GetTotal()
+        {
+            double[] Bytes = sqlite.GetTotal(intClass.usefulInterfaces3[cb_Interfaces.SelectedIndex]);
+            double BytesRecived = Math.Round((Bytes[0]) / (Math.Pow(1024, 2)), 2);
+            double BytesSent = Math.Round((Bytes[1]) / (Math.Pow(1024, 2)), 2);
+            label_BytesRecivedTotal.Content = BytesRecived.ToString() + "MB";
+            label_BytesSentTotal.Content = BytesSent.ToString() + "MB";
         }
     }
 }
